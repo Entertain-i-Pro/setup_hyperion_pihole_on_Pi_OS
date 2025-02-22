@@ -1,54 +1,52 @@
-README – Installation von Hyperion & Pi-hole
-Download & Installation
-Skript herunterladen
+# Setup Hyperion & Pi-hole – README
 
-bash
-Kopieren
-wget https://example.com/setup_hyperion_pihole.sh
-Ausführbar machen
+## 📌 Überblick
+Dieses Skript automatisiert die Einrichtung von **Hyperion** (Ambilight-Software) und **Pi-hole** (Adblocker) auf einem **Raspberry Pi 5**. 
+Es aktualisiert das System, stellt die Sprache auf Deutsch, aktiviert SPI mit dem Overlay `dtoverlay=spi1-3cs,bufsize=4096` 
+und installiert beide Dienste. Am Ende wird der Pi neu gestartet.
 
-bash
-Kopieren
-chmod +x setup_hyperion_pihole.sh
-Skript starten
+## 🔹 Funktionen des Skripts
+- Automatisches System-Upgrade
+- Aktivierung von SPI und Setzen des Overlays in `config.txt`
+- Konfiguration auf Deutschland (Locale, Tastatur, WLAN-Land)
+- Hyperion-Installation (GPG-Key & Repository einrichten)
+- Pi-hole-Installation (interaktiv)
+- Automatischer Neustart nach Abschluss
 
-bash
-Kopieren
+## 📥 Installation & Nutzung
+1. Skript herunterladen
+
+wget https://example.com/setup_hyperion_pihole.sh chmod +x setup_hyperion_pihole.sh
+
+2. Skript ausführen
+
 sudo ./setup_hyperion_pihole.sh
-Was macht das Skript?
-System aktualisieren
-Aktualisiert Paketquellen und führt Upgrade durch.
 
-Sprache & Tastatur
-Stellt das System auf Deutschland ein (Locale, Tastatur, WLAN-Land).
+3. Interaktive Schritte bei Pi-hole  
+Während der Installation werden Fragen zu Netzwerk und DNS gestellt.
 
-SPI aktivieren & Overlay
-Aktiviert SPI und setzt dtoverlay=spi1-3cs,bufsize=4096 in config.txt.
+Nach dem Neustart sollten **Hyperion** und **Pi-hole** fertig eingerichtet sein.
 
-Hyperion installieren
-Lädt GPG-Key, richtet Repository ein und installiert Hyperion.
+## 🛠 Fehlerbehebung & Debugging
+- **Hyperion-Status prüfen**
 
-Pi-hole installieren
-Führt das Standard-Installationsscript von Pi-hole aus (interaktiv).
+sudo systemctl status hyperion journalctl -u hyperion
 
-Neustart
-Startet den Raspberry Pi am Ende neu.
+- **Pi-hole prüfen**
 
-Mögliche Debug-Infos
-Logdateien prüfen
+pihole status pihole -c
 
-journalctl -u hyperion.service
-pihole -c (Statusübersicht Pi-hole)
-Konfigurationsdateien
+- **SPI-Overlay validieren**
 
-/boot/config.txt oder /boot/firmware/config.txt
-/etc/hyperion/hyperion.config.json (Hyperion)
-Netzwerkfehler
+cat /boot/firmware/config.txt | grep spi1-3cs
 
-ping -c 4 8.8.8.8 (Internetverbindung testen)
-ip a (Netzwerkschnittstellen prüfen)
-Neuinstallation
+- **Netzwerkfehler überprüfen**
 
-Skript erneut ausführen oder manuell:
-sudo apt-get remove hyperion
-pihole uninstall
+ping -c 4 8.8.8.8 ip a
+
+- **Neuinstallation von Hyperion oder Pi-hole**
+
+sudo apt-get remove hyperion pihole uninstall
+
+
+> **Hinweis:** Falls Probleme auftreten, bitte relevante Logausgaben (Hyperion, Pi-hole) beifügen, damit eine genauere Analyse möglich ist.
