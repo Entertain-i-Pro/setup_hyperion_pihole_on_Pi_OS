@@ -10,11 +10,10 @@
 # 📌 Ablauf des Skripts:
 # 1. Prüfung auf root-Rechte
 # 2. Systemaktualisierung & Installation wichtiger Pakete
-# 3. Anpassung der Systemeinstellungen (Locale, Tastatur, WLAN-Land)
-# 4. Aktivierung von SPI & Setzen des Overlays
-# 5. Installation von Hyperion & Aktivierung des Dienstes
-# 6. Installation von Pi-hole (interaktiv)
-# 7. Benutzerabfrage für Neustart
+# 3. Anpassung der Systemeinstellungen (Locale, Tastatur, WLAN-Land, SPI)
+# 4. Installation von Hyperion & Aktivierung des Dienstes
+# 5. Installation von Pi-hole (interaktiv)
+# 6. Benutzerabfrage für Neustart
 #
 # ℹ️ Hinweise:
 # - Das Skript ist für Raspberry Pi OS (Debian-basiert) optimiert.
@@ -49,19 +48,13 @@ main() {
     info "1️⃣ System wird aktualisiert..."
     apt-get update -y && apt-get upgrade -y && echo "✅ Systemaktualisierung erfolgreich." || echo "❌ Fehler bei der Systemaktualisierung."
     
-    info "2️⃣ Systemeinstellungen anpassen (Deutschland) ..."
+    info "2️⃣ Systemeinstellungen anpassen (Deutschland & SPI) ..."
+    raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
     raspi-config nonint do_change_locale de_DE.UTF-8 && echo "✅ Locale gesetzt."
     raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys && echo "✅ Tastatur gesetzt."
     raspi-config nonint do_wifi_country DE && echo "✅ WLAN-Land gesetzt."
-    
-    info "3️⃣ Installation notwendiger Tools..."
-    apt-get install -y curl && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
-    
-    info "4️⃣ Pi-hole wird installiert..."
-    curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
-    
-    info "5️⃣ SPI aktivieren & Overlay setzen..."
-    raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
+    sudo systemctl restart keyboard-setup
+    sudo udevadm trigger --subsystem-match=input --action=change
     
     CONFIG_TXT="/boot/firmware/config.txt"
     [[ -f "/boot/config.txt" ]] && CONFIG_TXT="/boot/config.txt"
@@ -71,14 +64,20 @@ main() {
         exit 1
     fi
     
-    if ! grep -q "\[ALL\]" "$CONFIG_TXT"; then
-        echo -e "\n[ALL]" >> "$CONFIG_TXT"
-        echo "✅ [ALL] Abschnitt hinzugefügt."
+    if grep -q "\[ALL\]" "$CONFIG_TXT"; then
+        echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
+    else
+        echo "❌ Fehler: [ALL] Abschnitt nicht gefunden in config.txt."
+        exit 1
     fi
     
-    echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
+    info "3️⃣ Installation notwendiger Tools..."
+    apt-get install -y curl && echo "✅ Tools erfolgreich installiert." || echo "❌ Fehler bei der Tools-Installation."
     
-    info "6️⃣ Hyperion wird installiert..."
+    info "4️⃣ Pi-hole wird installiert..."
+    curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
+    
+    info "5️⃣ Hyperion wird installiert..."
     apt-get update -y
     apt-get install -y wget gpg apt-transport-https lsb-release && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
     
@@ -92,7 +91,7 @@ main() {
     apt-get install -y hyperion && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
     systemctl enable --now hyperion && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
     
-    info "7️⃣ Neustart in 5 Sekunden..."
+    info "6️⃣ Neustart in 5 Sekunden..."
     sleep 5
     
     read -p "🔄 Möchtest du den Raspberry Pi jetzt neustarten? (y/n) " -n 1 -r
