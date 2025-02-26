@@ -1,31 +1,33 @@
 #!/bin/bash
 ################################################################################
-# setup_hyperion_pihole.sh
+# Setup-Skript: Hyperion & Pi-hole auf Raspberry Pi 5
 #
-# Dieses Skript richtet einen Raspberry Pi 5 ein, um Hyperion und Pi-hole zu
-# installieren. Dabei werden folgende Schritte ausgeführt:
+# Dieses Skript automatisiert die Installation und Konfiguration von:
+# - Hyperion (Ambilight-Software)
+# - Pi-hole (Adblocker)
 #
+# 📌 Ablauf des Skripts:
 # 1. Prüfung auf root-Rechte
-# 2. Systemaktualisierung & Grundpakete
-# 3. Deutschland-Einstellungen (Locale, Tastatur, WLAN-Land)
-# 4. SPI-Aktivierung & Overlay in /boot/firmware/config.txt (dtoverlay=spi1-3cs,bufsize=4096)
-# 5. Installation von Hyperion
+# 2. Systemaktualisierung & Installation wichtiger Pakete
+# 3. Anpassung der Systemeinstellungen (Locale, Tastatur, WLAN-Land)
+# 4. Aktivierung von SPI & Setzen des Overlays
+# 5. Installation von Hyperion & Aktivierung des Dienstes
 # 6. Installation von Pi-hole (interaktiv)
 # 7. Benutzerabfrage für Neustart
 #
-# HINWEIS:
-# - Bitte nur auf einem aktuellen Raspberry Pi OS ausführen (getestet auf Debian-basiert).
-# - Pi-hole-Installation ist interaktiv (Auswahl DNS, IP-Einstellungen usw.).
+# ℹ️ Hinweise:
+# - Das Skript ist für Raspberry Pi OS (Debian-basiert) optimiert.
+# - Die Pi-hole-Installation ist interaktiv (z. B. DNS- & Netzwerk-Einstellungen).
 ################################################################################
 
-# Script bricht bei Fehler ab und meldet diesen.
+# Fehlerbehandlung: Bei Fehlern abbrechen & Meldung ausgeben
 set -euo pipefail
-trap 'echo "❌ ERROR: Skript abgebrochen." ; exit 1' ERR
+trap 'echo "❌ Fehler: Skript abgebrochen." ; exit 1' ERR
 
-# Log-Datei erstellen
+# Erstellung einer Log-Datei für das Setup
 exec > >(tee -i /var/log/setup_hyperion_pihole.log) 2>&1
 
-# Prüft, ob Skript als root ausgeführt wird.
+# 📌 Prüfen, ob Skript mit root-Rechten ausgeführt wird
 check_root() {
   if [[ $EUID -ne 0 ]]; then
     echo "❌ Dieses Skript muss als root (oder mit sudo) ausgeführt werden!"
@@ -33,56 +35,42 @@ check_root() {
   fi
 }
 
-# Gibt Info-Meldungen aus.
+# 📌 Funktion zur Anzeige von Info-Meldungen
 info() {
   echo -e "\033[1;34m[INFO]\033[0m $*"
 }
 
-# Installiert ein Paket, falls nicht vorhanden.
-install_if_missing() {
-  local cmd="$1"
-  local pkg="$2"
-  if ! command -v "$cmd" &> /dev/null; then
-    info "📦 Installiere Paket: $pkg ..."
-    apt-get install -y "$pkg"
-  fi
-}
-
+# --- Skriptablauf ---
 main() {
   check_root
 
   info "1️⃣ System wird aktualisiert..."
-  apt-get update -y
-  apt-get upgrade -y
+  apt-get update -y && apt-get upgrade -y
 
-  # Wichtige Tools installieren (z.B. curl, raspi-config)
-  info "2️⃣ Prüfe/Installiere notwendige Tools..."
-  install_if_missing "raspi-config" "raspi-config"
-  install_if_missing "curl" "curl"
+  info "2️⃣ Installation notwendiger Tools..."
+  apt-get install -y curl
 
-  info "3️⃣ System auf Deutschland einstellen..."
+  info "3️⃣ Systemeinstellungen anpassen (Deutschland) ..."
   raspi-config nonint do_change_locale de_DE.UTF-8
   raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys
   raspi-config nonint do_wifi_country DE
 
-  info "4️⃣ SPI aktivieren und Overlay setzen..."
+  info "4️⃣ SPI aktivieren..."
   raspi-config nonint do_spi 0
 
   CONFIG_TXT="/boot/firmware/config.txt"
   [[ -f "/boot/config.txt" ]] && CONFIG_TXT="/boot/config.txt"
 
   if [[ ! -f "$CONFIG_TXT" ]]; then
-    echo "❌ FEHLER: Konnte config.txt nicht finden."
+    echo "❌ Fehler: config.txt nicht gefunden."
     exit 1
   fi
 
-  sed -i '/^dtoverlay=spi1-3cs/d' "$CONFIG_TXT"
   sed -i '/^dtparam=spi=/d' "$CONFIG_TXT"
+  sed -i '/^dtoverlay=spi1-3cs/d' "$CONFIG_TXT"
+  echo -e "[ALL]\ndtparam=spi=on\ndtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT"
 
-  echo "dtparam=spi=on" >> "$CONFIG_TXT"
-  echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT"
-
-  info "5️⃣ Installation von Hyperion..."
+  info "5️⃣ Hyperion wird installiert..."
   apt-get update -y
   apt-get install -y wget gpg apt-transport-https lsb-release
 
@@ -96,7 +84,7 @@ main() {
   apt-get install -y hyperion
   systemctl enable --now hyperion
 
-  info "6️⃣ Installation von Pi-hole..."
+  info "6️⃣ Pi-hole wird installiert..."
   curl -sSL https://install.pi-hole.net | bash
 
   info "7️⃣ Neustart in 5 Sekunden..."
@@ -111,5 +99,6 @@ main() {
   fi
 }
 
+# Skript ausführen
 main "$@"
 
