@@ -65,7 +65,7 @@ main() {
         exit 1
     fi
     
-    if grep -q "\[ALL\]" "$CONFIG_TXT"; then
+    if grep -q "\[all\]" "$CONFIG_TXT"; then
         sed -i '/dtoverlay=spi1-3cs/d' "$CONFIG_TXT"
         echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
     else
