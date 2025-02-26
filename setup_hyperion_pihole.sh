@@ -54,7 +54,13 @@ main() {
     raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys && echo "✅ Tastatur gesetzt."
     raspi-config nonint do_wifi_country DE && echo "✅ WLAN-Land gesetzt."
     
-    info "3️⃣ SPI aktivieren & Overlay setzen..."
+    info "3️⃣ Installation notwendiger Tools..."
+    apt-get install -y curl && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
+    
+    info "4️⃣ Pi-hole wird installiert..."
+    curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
+    
+    info "5️⃣ SPI aktivieren & Overlay setzen..."
     raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
     
     CONFIG_TXT="/boot/firmware/config.txt"
@@ -65,19 +71,12 @@ main() {
         exit 1
     fi
     
-    if grep -q "\[all\]" "$CONFIG_TXT"; then
-        sed -i '/dtoverlay=spi1-3cs/d' "$CONFIG_TXT"
-        echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
-    else
-        echo "❌ Fehler: [ALL] Abschnitt nicht gefunden in config.txt."
-        exit 1
+    if ! grep -q "\[ALL\]" "$CONFIG_TXT"; then
+        echo -e "\n[ALL]" >> "$CONFIG_TXT"
+        echo "✅ [ALL] Abschnitt hinzugefügt."
     fi
     
-    info "4️⃣ Installation notwendiger Tools..."
-    apt-get install -y curl && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
-    
-    info "5️⃣ Pi-hole wird installiert..."
-    curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
+    echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
     
     info "6️⃣ Hyperion wird installiert..."
     apt-get update -y
