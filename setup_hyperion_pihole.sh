@@ -50,12 +50,6 @@ main() {
     
     info "2️⃣ Systemeinstellungen anpassen (Deutschland & SPI) ..."
     raspi-config nonint do_change_locale de_DE.UTF-8 && echo "✅ Locale gesetzt."
-    export LANGUAGE=de_DE.UTF-8
-    export LC_ALL=de_DE.UTF-8
-    export LANG=de_DE.UTF-8
-    locale-gen de_DE.UTF-8
-    dpkg-reconfigure --frontend=noninteractive locales
-    
     raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys && echo "✅ Tastatur gesetzt."
     raspi-config nonint do_wifi_country DE && echo "✅ WLAN-Land gesetzt."
     
