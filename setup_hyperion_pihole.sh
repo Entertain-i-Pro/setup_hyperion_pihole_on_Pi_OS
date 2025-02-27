@@ -71,7 +71,7 @@ main() {
     echo dtoverlay=spi1-3cs,bufsize=4096 >> "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
     
     info "3️⃣ Installation notwendiger Tools..."
-    apt-get install -y git curl wget && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
+    apt-get install -y git curl wget && echo "✅ Tools erfolgreich installiert." || echo "❌ Fehler bei der Tools-Installation."
     
     info "4️⃣ Pi-hole wird installiert..."
     curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
