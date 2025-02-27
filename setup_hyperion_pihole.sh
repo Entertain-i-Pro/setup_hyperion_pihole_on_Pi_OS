@@ -49,17 +49,13 @@ main() {
     apt-get update -y && apt-get upgrade -y && echo "✅ Systemaktualisierung erfolgreich." || echo "❌ Fehler bei der Systemaktualisierung."
     
     info "2️⃣ Systemeinstellungen anpassen (Deutschland & SPI) ..."
-    raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
     raspi-config nonint do_change_locale de_DE.UTF-8 && echo "✅ Locale gesetzt."
-    export LANGUAGE=de_DE.UTF-8
-    export LC_ALL=de_DE.UTF-8
-    export LANG=de_DE.UTF-8
-    locale-gen de_DE.UTF-8
-    dpkg-reconfigure --frontend=noninteractive locales
     raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys && echo "✅ Tastatur gesetzt."
     raspi-config nonint do_wifi_country DE && echo "✅ WLAN-Land gesetzt."
     sudo systemctl restart keyboard-setup
     sudo udevadm trigger --subsystem-match=input --action=change
+    
+    raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
     
     CONFIG_TXT="/boot/firmware/config.txt"
     [[ -f "/boot/config.txt" ]] && CONFIG_TXT="/boot/config.txt"
@@ -77,7 +73,7 @@ main() {
     fi
     
     info "3️⃣ Installation notwendiger Tools..."
-    apt-get install -y curl && echo "✅ Tools erfolgreich installiert." || echo "❌ Fehler bei der Tools-Installation."
+    apt-get install -y curl && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
     
     info "4️⃣ Pi-hole wird installiert..."
     curl -sSL https://install.pi-hole.net | bash && echo "✅ Pi-hole erfolgreich installiert." || echo "❌ Fehler bei der Pi-hole-Installation."
