@@ -88,7 +88,7 @@ main() {
     
     apt-get update -y
     apt-get install -y hyperion && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
-    systemctl enable --now hyperion && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
+    systemctl enable --now hyperion@alexo.service && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
     
     info "6️⃣ Neustart in 5 Sekunden..."
     sleep 5
