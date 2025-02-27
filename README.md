@@ -16,7 +16,7 @@ Das Skript sorgt für ein vollständiges System-Update, konfiguriert das System 
 ### **1️⃣ Skript herunterladen & vorbereiten**
 ```bash
 wget https://raw.githubusercontent.com/Entertain-i-Pro/setup_hyperion_pihole_on_Pi_OS/main/setup_hyperion_pihole.sh
-chmod +x setup_hyperion_pihole.sh
+chmod 777 setup_hyperion_pihole.sh
 ```
 
 ### **2️⃣ Skript ausführen**
