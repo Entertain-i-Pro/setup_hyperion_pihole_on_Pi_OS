@@ -70,17 +70,19 @@ else
 fi
 
 # 4. Installation von Hyperion
-echo "📥 Installiere Hyperion..."
-HYPERION_URL="https://github.com/hyperion-project/hyperion.ng/releases/download/2.0.0/hyperion-2.0.0-Linux-armv7l.deb"
-if wget "$HYPERION_URL" -O /tmp/hyperion.deb; then
-  dpkg -i /tmp/hyperion.deb || { echo "❌ Fehler bei der Hyperion-Installation!"; exit 1; }
-  systemctl enable hyperion.service && systemctl start hyperion.service
-  echo "✅ Hyperion installiert und gestartet."
-else
-  echo "❌ Fehler: Hyperion-Paket konnte nicht heruntergeladen werden!"
-  exit 1
-fi
-
+apt-get update -y
+    apt-get install -y wget gpg apt-transport-https lsb-release && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
+    
+    wget -qO- https://releases.hyperion-project.org/hyperion.pub.key | \
+    gpg --dearmor -o /usr/share/keyrings/hyperion.pub.gpg
+    
+    echo "deb [signed-by=/usr/share/keyrings/hyperion.pub.gpg] https://apt.releases.hyperion-project.org/ $(lsb_release -cs) main" \
+    | tee /etc/apt/sources.list.d/hyperion.list
+    
+    apt-get update -y
+    apt-get install -y hyperion && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
+    systemctl enable --now hyperion && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
+    
 # 5. Installation von Pi-hole
 echo "📥 Installiere Pi-hole..."
 if curl -sSL https://install.pi-hole.net | bash; then
