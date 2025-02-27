@@ -54,7 +54,7 @@ fi
 
 # 3.4 SPI aktivieren
 echo "⚡ Aktiviere SPI-Schnittstelle..."
-CONFIG_TXT="/boot/config.txt"
+CONFIG_TXT="/boot/firmware/config.txt"
 if ! grep -q "^dtparam=spi=on" "$CONFIG_TXT"; then
   echo "dtparam=spi=on" >> "$CONFIG_TXT" && echo "✅ SPI aktiviert."
 else
@@ -81,7 +81,7 @@ apt-get update -y
     
     apt-get update -y
     apt-get install -y hyperion && echo "✅ Hyperion erfolgreich installiert." || echo "❌ Fehler bei der Hyperion-Installation."
-    systemctl enable --now hyperion && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
+    systemctl enable --now hyperion@alexo.service && echo "✅ Hyperion-Dienst erfolgreich gestartet." || echo "❌ Fehler beim Starten des Hyperion-Dienstes."
     
 # 5. Installation von Pi-hole
 echo "📥 Installiere Pi-hole..."
