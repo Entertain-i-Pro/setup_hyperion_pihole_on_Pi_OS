@@ -10,7 +10,7 @@
 # 📌 Ablauf des Skripts:
 # 1. Prüfung auf root-Rechte
 # 2. Systemaktualisierung & Installation wichtiger Pakete
-# 3. Anpassung der Systemeinstellungen (Locale, Tastatur, WLAN-Land, SPI)
+# 3. Anpassung der Systemeinstellungen (Locale, Tastatur, WLAN-Land, SPI-Aktivierung)
 # 4. Installation von Hyperion & Aktivierung des Dienstes
 # 5. Installation von Pi-hole (interaktiv)
 # 6. Benutzerabfrage für Neustart
@@ -53,6 +53,11 @@ main() {
     raspi-config nonint do_configure_keyboard de-latin1-nodeadkeys && echo "✅ Tastatur gesetzt."
     raspi-config nonint do_wifi_country DE && echo "✅ WLAN-Land gesetzt."
     
+    info "🔄 Tastatur-Setup neu laden..."
+    sudo systemctl restart keyboard-setup
+    sudo udevadm trigger --subsystem-match=input --action=change
+
+    info "✅ SPI aktivieren & Overlay setzen..."
     raspi-config nonint do_spi 0 && echo "✅ SPI erfolgreich aktiviert." || echo "❌ Fehler bei der SPI-Aktivierung."
     
     CONFIG_TXT="/boot/firmware/config.txt"
@@ -63,8 +68,7 @@ main() {
         exit 1
     fi
     
-    grep -qxF "dtoverlay=spi1-3cs,bufsize=4096" "$CONFIG_TXT" || echo "dtoverlay=spi1-3cs,bufsize=4096" >> "$CONFIG_TXT"
-    echo "✅ SPI-Overlay hinzugefügt."
+    echo "dtoverlay=spi1-3cs,bufsize=4096" | sudo tee -a "$CONFIG_TXT" && echo "✅ SPI-Overlay hinzugefügt." || echo "❌ Fehler beim Hinzufügen des SPI-Overlays."
     
     info "3️⃣ Installation notwendiger Tools..."
     apt-get install -y curl && echo "✅ Curl erfolgreich installiert." || echo "❌ Fehler bei der Curl-Installation."
